@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Who's That Pokémon?</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      #game {
+        text-align: center;
+        align-items: center;
+        height: 30vh;
+        margin-top: 50px;
+      }
+
+      #gameGrid {
+        margin: auto;
+      }
+
+      #cry {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      h1 {
+        margin-top: 50px;
+      }
+      #hint,
+      h1,
+      #cry,
+      #image,
+      #madeby {
+        text-align: center;
+      }
+
+      #gameGrid {
+        width: 500px;
+        font-size: 50px;
+        text-align: center;
+      }
+
+      #inputField {
+        margin-left: 15px;
+        padding: 10px;
+        font-size: 16px;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        width: 200px;
+        margin-right: 10px;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      button:active {
+        background-color: #3e8e41;
+      }
+
+      #image {
+        margin-top: 50px;
+      }
+
+      #image {
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        mask-size: 200px;
+        mask-repeat: no-repeat;
+        mask-position: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Who's That Pokémon?</h1>
+    <div id="image"></div>
+    <div id="game">
+      <div id="gameGrid"></div>
+      <input type="text" id="inputField" placeholder="Enter Guess" />
+      <button
+        onclick="checkGuess(document.getElementById('inputField').value.toUpperCase())"
+      >
+        Try
+      </button>
+    </div>
+    <p id="hint"></p>
+    <p id="cry"></p>
+    <script>
+      let word = [];
+      let hint = "";
+      let guess = "";
+      let guessedLetters = [];
+      let cryURL = "";
+      let imgURL =
+        "https://unpkg.com/pokeapi-sprites@2.0.2/sprites/pokemon/other/dream-world/";
+
+      getData();
+
+      setTimeout(() => {
+        startGame();
+      }, 1000);
+
+      async function getData() {
+        const pokemonNumber = Math.floor(Math.random() * 200);
+
+        const pokemonNameAPI =
+          "https://pokeapi.co/api/v2/pokemon/" + pokemonNumber;
+        const pokemonDescriptionAPI =
+          "https://pokeapi.co/api/v2/pokemon-species/" + pokemonNumber;
+
+        const responses = await Promise.all([
+          fetch(pokemonNameAPI),
+          fetch(pokemonDescriptionAPI),
+        ]);
+
+        const data = await responses[0].json();
+        const data1 = await responses[1].json();
+
+        console.log(data);
+        console.log(data1);
+
+        word = data.name.toUpperCase().split("");
+        hint = data1.flavor_text_entries[0].flavor_text;
+        cryURL = data.cries.latest;
+        imgURL = imgURL + data.id + ".svg";
+      }
+
+      function startGame() {
+        document.getElementById("hint").innerHTML = "Hint: " + hint + ".";
+        document.getElementById("cry").innerHTML =
+          "Pokemon Cry:<audio controls> <source type='audio/ogg' src='" +
+          cryURL +
+          "'/> Your browser does not support the audio element.</audio>";
+
+        document.getElementById("image").style =
+          "mask-image: url('" + imgURL + "'); background:#000;";
+
+        for (let i = 0; i < word.length; i++) {
+          guessedLetters.push("");
+        }
+
+        outputGuess(guessedLetters);
+        document.getElementById("inputField").focus();
+      }
+
+      function outputGuess(string) {
+        let output = "";
+        for (let i = 0; i < string.length; i++) {
+          if (string[i] === "") {
+            output += "_ ";
+          } else {
+            output += string[i] + " ";
+          }
+        }
+        document.getElementById("gameGrid").innerHTML = output + "<br><br>";
+        if (guessedLetters.join("") === word.join("")) {
+          document.getElementById("image").innerHTML =
+            "<img height='200px' src='" + imgURL + "'/>";
+          document.getElementById("image").style = "";
+          document.getElementById("gameGrid").style.color = "#b4d455";
+          const cryAudio = new Audio(cryURL);
+          cryAudio.play();
+        }
+      }
+
+      function checkGuess(guess) {
+        const guessArray = guess.split("");
+        let countTo;
+        guessArray.length > word.length
+          ? (countTo = guessArray.length)
+          : (countTo = word.length);
+
+        for (let i = 0; i < countTo; i++) {
+          for (let j = 0; j < countTo; j++) {
+            if (guessArray[i] == word[j]) {
+              guessedLetters[j] = guessArray[i].toUpperCase();
+            }
+          }
+        }
+
+        outputGuess(guessedLetters);
+        document.getElementById("inputField").value = "";
+        document.getElementById("inputField").focus();
+      }
+    </script>
+    <p id="madeby">
+      <a href="https://github.com/nat-is-alive/original-word-game/"
+        >Made by nat-is-alive</a
+      >
+    </p>
+  </body>
+</html>
